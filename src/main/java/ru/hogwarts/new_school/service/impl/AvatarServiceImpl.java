@@ -90,8 +90,8 @@ public class AvatarServiceImpl implements AvatarService {
     }
 
     @Override
-    public List<Avatar> getAvatars(int page, int pageSize) {
-        PageRequest pageRequest = PageRequest.of(page - 1, pageSize);
+    public List<Avatar> getAvatarsWithPagination(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page - 1, size);
         return avatarRepository.findAll(pageRequest).getContent();
     }
 }

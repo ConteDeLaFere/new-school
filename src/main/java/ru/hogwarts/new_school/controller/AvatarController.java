@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -38,7 +39,7 @@ public class AvatarController {
     }
 
     @GetMapping("{id}/avatar/preview")
-    public ResponseEntity<byte[]> downloadAvatar(@PathVariable Long id) throws IOException {
+    public ResponseEntity<byte[]> downloadAvatar(@PathVariable Long id) {
         Avatar avatar = avatarService.findAvatar(id);
 
         HttpHeaders headers = new HttpHeaders();
@@ -66,10 +67,35 @@ public class AvatarController {
 
     }
 
-    @GetMapping()
-    public ResponseEntity<List<Avatar>> getAllAvatars(@RequestParam int page, @RequestParam int pageSize) {
-        List<Avatar> avatars = avatarService.getAvatars(page, pageSize);
-        return ResponseEntity.ok().body(avatars);
+    @GetMapping("/all")
+    public ResponseEntity<?> getAvatarsWithPagination(
+            @RequestParam Integer page,
+            @RequestParam Integer size) throws IOException {
+
+        List<Avatar> avatars = avatarService.getAvatarsWithPagination(page, size);
+
+        if (avatars.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        List<ResponseEntity<byte[]>> responses = new ArrayList<>();
+
+        for (Avatar avatar : avatars) {
+            Path path = Path.of(avatar.getFilePath());
+
+            if (Files.exists(path)) {
+                byte[] content = Files.readAllBytes(path);
+
+                responses.add(ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(avatar.getMediaType()))
+                        .contentLength(avatar.getFileSize())
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + path.getFileName().toString() + "\"")
+                        .body(content));
+            }
+
+        }
+
+        return ResponseEntity.ok(responses);
     }
 
 }

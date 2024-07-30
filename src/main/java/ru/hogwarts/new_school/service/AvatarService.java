@@ -10,5 +10,5 @@ public interface AvatarService {
 
     void uploadAvatar(Long studentId, MultipartFile file) throws IOException;
     Avatar findAvatar(Long studentId);
-    List<Avatar> getAvatars(int page, int pageSize);
+    List<Avatar> getAvatarsWithPagination(int page, int size);
 }

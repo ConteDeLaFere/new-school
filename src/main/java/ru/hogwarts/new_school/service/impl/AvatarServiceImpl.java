@@ -1,6 +1,8 @@
 package ru.hogwarts.new_school.service.impl;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -31,18 +33,32 @@ public class AvatarServiceImpl implements AvatarService {
     private final AvatarRepository avatarRepository;
     private final StudentService studentService;
 
+    Logger logger = LoggerFactory.getLogger(AvatarServiceImpl.class);
+
     public AvatarServiceImpl(AvatarRepository avatarRepository, StudentService studentService) {
         this.avatarRepository = avatarRepository;
         this.studentService = studentService;
     }
 
     @Override
-    public void uploadAvatar(Long studentId, MultipartFile file) throws IOException {
+    public void uploadAvatar(Long studentId, MultipartFile file)  {
+        logger.info("Uploading avatar for student with id {} (filename: {})", studentId, file.getOriginalFilename());
+
         Student student = studentService.findStudent(studentId);
 
         Path filePath = Path.of(avatarsDir, studentId + "." + getExtension(file.getOriginalFilename()));
-        Files.createDirectories(filePath.getParent());
-        Files.deleteIfExists(filePath);
+        try {
+            Files.createDirectories(filePath.getParent());
+        } catch (IOException exception) {
+            logger.error("Unable to create directory for avatar file {}", file.getOriginalFilename());
+            throw new RuntimeException(exception);
+        }
+        try {
+            Files.deleteIfExists(filePath);
+        } catch (IOException exception) {
+            logger.error("Unable to delete file {}", file.getOriginalFilename());
+            throw new RuntimeException(exception);
+        }
 
         try (InputStream is = file.getInputStream();
             OutputStream os = Files.newOutputStream(filePath, CREATE_NEW);
@@ -50,6 +66,9 @@ public class AvatarServiceImpl implements AvatarService {
             BufferedInputStream bis = new BufferedInputStream(is, 1024)
         ) {
             bis.transferTo(bos);
+        } catch (IOException exception) {
+            logger.error("Error while uploading avatar");
+            throw new RuntimeException(exception);
         }
 
         Avatar avatar = findAvatar(studentId);
@@ -59,10 +78,14 @@ public class AvatarServiceImpl implements AvatarService {
         avatar.setMediaType(file.getContentType());
         avatar.setData(generateAvatarDataForDB(filePath));
 
+        logger.info("Avatar uploaded successfully");
+
         avatarRepository.save(avatar);
     }
 
-    private byte[] generateAvatarDataForDB(Path filePath) throws IOException {
+    private byte[] generateAvatarDataForDB(Path filePath) {
+        logger.info("Generating avatar data for file {}", filePath.getFileName().toString());
+
         try (InputStream is = Files.newInputStream(filePath);
              BufferedInputStream bis = new BufferedInputStream(is, 1024);
              ByteArrayOutputStream baos = new ByteArrayOutputStream()
@@ -75,22 +98,35 @@ public class AvatarServiceImpl implements AvatarService {
             graphics2D.dispose();
 
             ImageIO.write(preview, getExtension(filePath.getFileName().toString()), baos);
+
+            logger.info("Generated avatar data for file {}", filePath.getFileName().toString());
             return baos.toByteArray();
+
+        } catch (IOException exception) {
+            logger.error("Error while generating avatar");
+            throw new RuntimeException(exception);
         }
     }
 
     private String getExtension(String filename) {
+        logger.info("Getting extension for file {}", filename);
+
         return filename.substring(filename.lastIndexOf(".") + 1);
     }
 
 
 
     public Avatar findAvatar(Long studentId) {
+        logger.info("Finding avatar for student with id {}", studentId);
+        logger.warn("Avatar for student with id {} may not be found", studentId);
+
         return avatarRepository.findAvatarByStudentId(studentId).orElse(new Avatar());
     }
 
     @Override
     public List<Avatar> getAvatarsWithPagination(int page, int size) {
+        logger.info("Getting avatars for page {} and size {}", page, size);
+
         PageRequest pageRequest = PageRequest.of(page - 1, size);
         return avatarRepository.findAll(pageRequest).getContent();
     }

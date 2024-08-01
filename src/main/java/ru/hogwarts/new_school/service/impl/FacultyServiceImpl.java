@@ -9,6 +9,8 @@ import ru.hogwarts.new_school.repository.FacultyRepository;
 import ru.hogwarts.new_school.service.FacultyService;
 
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 public class FacultyServiceImpl implements FacultyService {
@@ -66,5 +68,19 @@ public class FacultyServiceImpl implements FacultyService {
             return null;
         }
         return faculty.getStudents();
+    }
+
+    @Override
+    public List<Faculty> findAllFaculties() {
+        return facultyRepository.findAll();
+    }
+
+    @Override
+    public String longestFacultyName() {
+        List<Faculty> faculties = findAllFaculties();
+        return faculties.stream()
+                .map(Faculty::getName)
+                .max(Comparator.comparing(String::length))
+                .orElse(null);
     }
 }

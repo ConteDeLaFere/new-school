@@ -15,4 +15,9 @@ public class InfoController {
     public String getPort() {
         return infoService.getPort();
     }
+
+    @GetMapping("/calculate")
+    public Integer calculate() {
+        return infoService.calculate();
+    }
 }

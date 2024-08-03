@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.hogwarts.new_school.service.InfoService;
 
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 
@@ -24,21 +25,60 @@ public class InfoServiceImpl implements InfoService {
 
     @Override
     public Integer calculate() {
-        logger.info("Calculating the result without parallel streams");
-        long startTime = System.currentTimeMillis();
-        int result1 = Stream.iterate(1, a -> a + 1)
-                .limit(1_000_000)
-                .reduce(0, Integer::sum);
-        logger.info("Time taken: {} ms", System.currentTimeMillis() - startTime);
 
-        logger.info("Calculating the result with parallel streams");
-        startTime = System.currentTimeMillis();
-        int result2 = Stream.iterate(1, a -> a + 1)
-                .limit(1_000_000)
-                .parallel()
-                .reduce(0, Integer::sum);
-        logger.info("Time taken: {} ms", System.currentTimeMillis() - startTime);
+        {
+            long startTime = System.currentTimeMillis();
+            int sum = Stream.iterate(1, i -> i + 1)
+                    .limit(1_000_000)
+                    .reduce(0, Integer::sum);
+            long endTime = System.currentTimeMillis();
+            logger.info("Total time taken: {}ms (result={})", endTime - startTime, sum);
+        }
 
-        return result2;
+        {
+            long startTime = System.currentTimeMillis();
+            int sum = Stream.iterate(1, i -> i + 1)
+                    .limit(1_000_000)
+                    .parallel()
+                    .reduce(0, Integer::sum);
+            long endTime = System.currentTimeMillis();
+            logger.info("Total time taken: {}ms (result={})", endTime - startTime, sum);
+        }
+
+        {
+            long startTime = System.currentTimeMillis();
+            int sum = IntStream.rangeClosed(1, 1_000_000)
+                    .reduce(0, Integer::sum);
+            long endTime = System.currentTimeMillis();
+            logger.info("Total time taken: {}ms (result={})", endTime - startTime, sum);
+        }
+
+        {
+            long startTime = System.currentTimeMillis();
+            int sum = IntStream.rangeClosed(1, 1_000_000)
+                    .parallel()
+                    .reduce(0, Integer::sum);
+            long endTime = System.currentTimeMillis();
+            logger.info("Total time taken: {}ms (result={})", endTime - startTime, sum);
+        }
+
+        {
+            long startTime = System.currentTimeMillis();
+            int sum = IntStream.rangeClosed(1, 1_000_000)
+                    .sum();
+            long endTime = System.currentTimeMillis();
+            logger.info("Total time taken: {}ms (result={})", endTime - startTime, sum);
+        }
+
+        {
+            long startTime = System.currentTimeMillis();
+            int sum = IntStream.rangeClosed(1, 1_000_000)
+                    .parallel()
+                    .sum();
+            long endTime = System.currentTimeMillis();
+            logger.info("Total time taken: {}ms (result={})", endTime - startTime, sum);
+        }
+
+        return 0;
     }
 }

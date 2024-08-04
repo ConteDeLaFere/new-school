@@ -97,4 +97,16 @@ public class StudentController {
         return ResponseEntity.ok(averageAge);
     }
 
+    @GetMapping("/print-parallel")
+    public ResponseEntity<Void> printParallel() {
+        studentService.printParallel();
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/print-synchronized")
+    public ResponseEntity<Void> printSynchronized() {
+        studentService.printSynchronized();
+        return ResponseEntity.noContent().build();
+    }
+
 }

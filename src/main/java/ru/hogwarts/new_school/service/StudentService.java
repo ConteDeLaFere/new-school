@@ -20,4 +20,7 @@ public interface StudentService {
     Long getAllStudentsCount();
     Double getAllStudentsAverageAge();
     List<Student> getLastFiveStudents();
+    List<Student> getAllStudents();
+    List<String> findStudentNamesBeginningWithLetterA();
+    Double calculateAverageAge();
 }

@@ -23,4 +23,9 @@ public interface StudentService {
     List<Student> getAllStudents();
     List<String> findStudentNamesBeginningWithLetterA();
     Double calculateAverageAge();
+
+    void printParallel();
+    void printSynchronized();
+    void printStudent(Student student);
+
 }

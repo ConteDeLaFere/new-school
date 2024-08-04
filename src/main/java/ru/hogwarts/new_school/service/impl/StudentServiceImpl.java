@@ -106,12 +106,65 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public Double calculateAverageAge() {
         List<Student> students = getAllStudents();
-        double ageSum = students.stream()
+        return students.stream()
                 .mapToDouble(Student::getAge)
-                .sum();
-
-        return ageSum / students.size();
+                .average()
+                .orElse(0.0);
     }
 
+    @Override
+    public void printParallel() {
+        logger.info("Was invoked method to print students' name in parallel streams");
+        List<Student> students = getAllStudents();
+        if (students.size() < 6) {
+            logger.error("Amount of students less than 6");
+            throw new RuntimeException();
+        }
 
+        logger.info("Student {}", students.get(0).getName());
+        logger.info("Student {}", students.get(1).getName());
+
+        Thread thread1 = new Thread(() -> {
+            logger.info("Student {}", students.get(2).getName());
+            logger.info("Student {}", students.get(3).getName());
+        });
+
+        Thread thread2 = new Thread(() -> {
+            logger.info("Student {}", students.get(4).getName());
+            logger.info("Student {}", students.get(5).getName());
+        });
+
+        thread1.start();
+        thread2.start();
+    }
+
+    @Override
+    public void printSynchronized() {
+        logger.info("Was invoked method to print students' name in synchronized time");
+        List<Student> students = getAllStudents();
+        if (students.size() < 6) {
+            logger.error("Amount of students less than 6");
+        }
+
+        printStudent(students.get(0));
+        printStudent(students.get(1));
+
+        Thread thread1 = new Thread(() -> {
+            printStudent(students.get(2));
+            printStudent(students.get(3));
+        });
+
+        Thread thread2 = new Thread(() -> {
+            printStudent(students.get(4));
+            printStudent(students.get(5));
+        });
+
+        thread1.start();
+        thread2.start();
+    }
+
+    @Override
+    public synchronized void printStudent(Student student) {
+        logger.info("Student {}", student.getName());
+    }
 }
